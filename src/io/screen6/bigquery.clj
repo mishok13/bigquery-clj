@@ -204,5 +204,5 @@
   [row]
   (let [table-row (TableRow.)]
     (doseq [[key value] row]
-      (.set table-row key value))
+      (.set table-row (if (keyword? key) (name key) key) value))
     table-row))
