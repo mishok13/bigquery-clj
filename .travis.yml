@@ -5,3 +5,5 @@ jdk:
   - openjdk6
   - oraclejdk7
 script: lein midje
+after_script:
+  - bash -ex bin/build/coveralls.sh
