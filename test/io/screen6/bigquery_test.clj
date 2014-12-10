@@ -5,4 +5,4 @@
 
 (fact
  "This fails"
- (1 => 0))
+ 1 => 0)
