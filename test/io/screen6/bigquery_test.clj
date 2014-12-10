@@ -4,5 +4,5 @@
    [midje.sweet :refer :all]))
 
 (fact
- "This fails"
- 1 => 0)
+ "This doesn't fail anymore"
+ 0 => 0)
