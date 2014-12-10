@@ -1,5 +1,5 @@
 [![License MIT][badge-license]](http://opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.org/marick/Midje.png?branch=master)](https://travis-ci.org/screen6/bigquery-clj)
+[![Build Status](https://travis-ci.org/screen6/bigquery-clj.png?branch=master)](https://travis-ci.org/screen6/bigquery-clj)
 
 # io.screen6/bigquery
 
