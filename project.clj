@@ -10,4 +10,7 @@
                              [lein-cloverage "1.0.2"]]}}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [com.google.apis/google-api-services-bigquery "v2-rev175-1.19.0"]
-                 [org.clojure/tools.logging "0.3.1"]])
+                 [org.clojure/tools.logging "0.3.1"]]
+  :repositories {"snapshots" {:url "https://clojars.org/repo"
+                              :username [:gpg :env]
+                              :password [:gpg :env]}})
