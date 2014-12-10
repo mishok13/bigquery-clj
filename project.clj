@@ -1,6 +1,8 @@
 (defproject io.screen6/bigquery "0.1.0-SNAPSHOT"
   :description "BigQuery API in Clojure"
   :url "http://github.com/screen6/bigquery"
+  :scm {:name "git"
+        :url "https://github.com/screen6/bigquery-clj"}
   :license {:name "MIT"
             :url "http://opensource.org/licenses/MIT"}
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
