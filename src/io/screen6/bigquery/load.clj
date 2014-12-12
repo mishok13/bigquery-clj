@@ -3,7 +3,8 @@
   (:require
    [cheshire.core :as json]
    [clj-http.client :as http]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [io.screen6.bigquery.auth :as auth]))
 
 (defn schema
   [project dataset table columns]
@@ -25,21 +26,37 @@
   1. Get resumable session id
   2. Upload file
   3. Handle failures"
-  [bq project dataset table columns path]
+  [credential project dataset table columns path]
   ;; Just get a new token every time, that's the stupidest and yet
   ;; most effective way to handle this for now
-  (.refreshToken bq)
+  (auth/refresh! credential)
+  (assert (.exists (io/file path)) "File doesn't exist")
   (let [content-length (.length (io/file path))
-        session-url (get-in (http/post (format RESUMABLE-UPLOAD-URL project)
-                                       {:body (json/encode (schema project dataset table columns))
-                                        :headers {"X-Upload-Content-Type" "application/octet-stream"
-                                                  "X-Upload-Content-Length" content-length
-                                                  "Content-Type" "application/json; charset=UTF-8"
-                                                  "Authorization" (format "Bearer %s" (.getAccessToken bq))}}) [:headers "Location"])]
-    (http/put session-url
-              {:body (slurp path)
-               :headers {"Authorization" (format "Bearer %s" (.getAccessToken bq))
-                         "Content-Type" "application/octet-stream"}})))
+        session-url (-> (format RESUMABLE-UPLOAD-URL project)
+                        (http/post
+                         {:body (json/encode (schema project dataset table columns))
+                          :headers {"X-Upload-Content-Type" "application/octet-stream"
+                                    "X-Upload-Content-Length" content-length
+                                    "Content-Type" "application/json; charset=UTF-8"
+                                    "Authorization" (format "Bearer %s" (auth/access-token credential))}})
+                        (get-in  [:headers "Location"]))
+        job (http/put session-url
+                      {:body (slurp path)
+                       :headers {"Authorization" (format "Bearer %s" (auth/access-token credential))
+                                 "Content-Type" "application/octet-stream"}})]
+    ;; TODO: actually wait for result!
+    (let [link (-> job :body (json/decode true) :selfLink)]
+      (loop [status nil]
+        (if (= status "DONE")
+          true
+          (do
+            (prn status)
+            (Thread/sleep 500)
+            (recur (-> link
+                       (http/get {:headers {"Authorization" (format "Bearer %s" (auth/access-token credential))}})
+                       (:body)
+                       (json/decode true)
+                       (get-in [:status :state])))))))))
 
 (defn jobs
   [bq project]

@@ -29,7 +29,7 @@
   (withMeta [_ m] (Query. bq job m))
   Object
   (toString [this]
-            (str (.getName (class this)) ": " (pr-str job)))
+    (str (.getName (class this)) ": " (pr-str job)))
   clojure.lang.IPending
   (isRealized [_]
     (logging/debugf "Check status of job %s" (.getJobId job))
@@ -181,11 +181,11 @@
 ;;          (#(doto (Job.) (.setConfiguration %))))))
 
 (defn ^:private prepare-job
-  ([sql]
-   (-> sql
-       (job-configuration)
-       (#(doto (JobConfiguration.) (.setQuery %)))
-       (#(doto (Job.) (.setConfiguration %))))))
+  [sql]
+  (-> sql
+      (job-configuration)
+      (#(doto (JobConfiguration.) (.setQuery %)))
+      (#(doto (Job.) (.setConfiguration %)))))
 
 (defn ^:private make-query
   "Start a query and return a value which will return a "
