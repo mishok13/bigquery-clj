@@ -13,20 +13,26 @@
 (def ^:private MULTIPART-UPLOAD-URL
   (format "%s/upload/bigquery/v2/projects/%%s/jobs?uploadType=multipart" API-URL))
 
-(defn- make-schema
-  [{:keys [project dataset table columns]}]
-  ;; There's also a :sourceFormat, but that's only for JSON files.
-  ;; TODO: add support for sourceFormat
-  {:configuration
-   {:load
-    {:schema {:fields (map (fn prepare-column [[name type]] {:name name :type type}) columns)}
-     :destinationTable {:projectId project
-                        :datasetId dataset
-                        :tableId table}}}})
+(defn- ^:testable make-schema
+  [{:keys [columns]}]
+  {:fields (map (fn prepare-column [[name type]] {:name name :type type}) columns)})
 
-(defn configure
+(defn- ^:testable make-table
+  [{:keys [project dataset table]}]
+  {:projectId project
+   :datasetId dataset
+   :tableId table})
+
+(defn- ^:testable configure
   [schema
    & {:keys [delimiter] :or {delimiter ","}}]
+  ;; There's also a :sourceFormat, but that's only for JSON files.
+  ;; TODO: add support for sourceFormat
+  ;;
+  ;; Ensure we pass only 1-character long strings here, since BigQuery
+  ;; API will otherwise just use the first character: "BigQuery
+  ;; ... uses the first byte of the encoded string to split the data".
+  (assert (= 1 (count delimiter)))
   (-> {}
       (assoc-in [:configuration :load :fieldDelimiter] delimiter)
       (assoc-in [:configuration :load :schema] (make-schema (:columns schema)))
