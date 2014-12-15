@@ -24,6 +24,14 @@
                         :datasetId dataset
                         :tableId table}}}})
 
+(defn configure
+  [schema
+   & {:keys [delimiter] :or {delimiter ","}}]
+  (-> {}
+      (assoc-in [:configuration :load :fieldDelimiter] delimiter)
+      (assoc-in [:configuration :load :schema] (make-schema (:columns schema)))
+      (assoc-in [:configuration :load :destinationTable] (make-table schema))))
+
 (defn resumable
   "Resumable upload
 
