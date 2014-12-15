@@ -20,8 +20,8 @@
                         :datasetId dataset
                         :tableId table}}}})
 
-(defn multipart
-  "Multipart upload
+(defn resumable
+  "Resumable upload
 
   The steps are:
   1. Get resumable session id
