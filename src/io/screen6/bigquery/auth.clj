@@ -26,6 +26,7 @@
   (access-token [this] (:token this)))
 
 (defn google-credential
+  "Google credentials as provided by Java API"
   [email key &
    {:keys [http-transport json-factory scopes]
     :or {http-transport (GoogleNetHttpTransport/newTrustedTransport)
