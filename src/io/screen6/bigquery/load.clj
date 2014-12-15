@@ -38,6 +38,18 @@
       (assoc-in [:configuration :load :schema] (make-schema (:columns schema)))
       (assoc-in [:configuration :load :destinationTable] (make-table schema))))
 
+(defn- ^:testable init-resumable-session
+  [creds schema content-length]
+  (-> (format RESUMABLE-UPLOAD-URL (:project schema))
+      (http/post
+       {:body (json/encode (configure schema :delimiter "\t"))
+        :headers {"X-Upload-Content-Type" "application/octet-stream"
+                  "X-Upload-Content-Length" content-length
+                  "Content-Type" "application/json; charset=UTF-8"
+                  "Authorization" (format "Bearer %s" (auth/access-token creds))}
+        :throw-entire-message? true})
+      (get-in  [:headers "Location"])))
+
 (defn resumable
   "Resumable upload
 
@@ -45,31 +57,25 @@
   1. Get resumable session id
   2. Upload file
   3. Handle failures"
-  [creds path schema & {:keys [type]}]
+  [creds schema path & {:keys [type] :or {type :csv}}]
   (assert (= type :csv))
   ;; Schema should contain columns, table, dataset and project info
   ;; XXX: look into combining that with Google API credentials?
   ;; Terrible way to ensure this, BUT I DON'T CARE RIGHT NOW
   (assert #{:project :table :columns :dataset} (set (keys schema)))
+  ;; Make sure the file exists
+  (assert (.exists (io/file path)) "File doesn't exist")
 
   ;; Just get a new token every time, that's the stupidest and yet
   ;; most effective way to handle this for now
   ;; Maybe detect type of file here?
   (auth/refresh! creds)
-  (assert (.exists (io/file path)) "File doesn't exist")
-  (let [content-length (.length (io/file path))
-        session-url (-> (format RESUMABLE-UPLOAD-URL (:project schema))
-                        (http/post
-                         {:body (json/encode (make-schema schema))
-                          :headers {"X-Upload-Content-Type" "application/octet-stream"
-                                    "X-Upload-Content-Length" content-length
-                                    "Content-Type" "application/json; charset=UTF-8"
-                                    "Authorization" (format "Bearer %s" (auth/access-token creds))}})
-                        (get-in  [:headers "Location"]))
+  (let [session-url (init-resumable-session creds schema (.length (io/file path)))
         job (http/put session-url
-                      {:body (slurp path)
+                      {:body (io/file path)
                        :headers {"Authorization" (format "Bearer %s" (auth/access-token creds))
-                                 "Content-Type" "application/octet-stream"}})]
+                                 "Content-Type" "application/octet-stream"}
+                       :throw-entire-message? true})]
     ;; TODO: actually wait for result!
     (let [link (-> job :body (json/decode true) :selfLink)]
       (loop [status nil]
