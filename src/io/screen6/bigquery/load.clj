@@ -6,10 +6,14 @@
    [clojure.java.io :as io]
    [io.screen6.bigquery.auth :as auth]))
 
+(def ^:private API-URL
+  "https://www.googleapis.com")
 (def ^:private RESUMABLE-UPLOAD-URL
-  "https://www.googleapis.com/upload/bigquery/v2/projects/%s/jobs?uploadType=resumable")
+  (format "%s/upload/bigquery/v2/projects/%%s/jobs?uploadType=resumable" API-URL))
+(def ^:private MULTIPART-UPLOAD-URL
+  (format "%s/upload/bigquery/v2/projects/%%s/jobs?uploadType=multipart" API-URL))
 
-(defn schema
+(defn- schema
   [project dataset table columns]
   ;; There's also a :sourceFormat, but that's only for JSON files.
   ;; TODO: add support for sourceFormat
@@ -58,7 +62,7 @@
                        (json/decode true)
                        (get-in [:status :state])))))))))
 
-(defn jobs
+(defn- jobs
   [bq project]
   (http/get (format "https://www.googleapis.com/bigquery/v2/projects/%s/jobs" project)
             {:headers {"Authorization" (format "Bearer %s" (.getAccessToken bq))}}))
