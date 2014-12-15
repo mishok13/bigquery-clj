@@ -35,6 +35,8 @@
   (assert (= type :csv))
   ;; Schema should contain columns, table, dataset and project info
   ;; XXX: look into combining that with Google API credentials?
+  ;; Terrible way to ensure this, BUT I DON'T CARE RIGHT NOW
+  (assert #{:project :table :columns :dataset} (set (keys schema)))
 
   ;; Just get a new token every time, that's the stupidest and yet
   ;; most effective way to handle this for now
