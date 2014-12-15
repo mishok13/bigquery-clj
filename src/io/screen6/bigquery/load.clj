@@ -6,18 +6,19 @@
    [clojure.java.io :as io]
    [io.screen6.bigquery.auth :as auth]))
 
+(def ^:private RESUMABLE-UPLOAD-URL
+  "https://www.googleapis.com/upload/bigquery/v2/projects/%s/jobs?uploadType=resumable")
+
 (defn schema
   [project dataset table columns]
+  ;; There's also a :sourceFormat, but that's only for JSON files.
+  ;; TODO: add support for sourceFormat
   {:configuration
    {:load
-    {;; :sourceFormat "<required for JSON files>",
-     :schema {:fields (map (fn prepare-column [[name type]] {:name name :type type}) columns)}
+    {:schema {:fields (map (fn prepare-column [[name type]] {:name name :type type}) columns)}
      :destinationTable {:projectId project
                         :datasetId dataset
                         :tableId table}}}})
-
-(def ^:private RESUMABLE-UPLOAD-URL
-  "https://www.googleapis.com/upload/bigquery/v2/projects/%s/jobs?uploadType=resumable")
 
 (defn multipart
   "Multipart upload
@@ -50,7 +51,6 @@
         (if (= status "DONE")
           true
           (do
-            (prn status)
             (Thread/sleep 500)
             (recur (-> link
                        (http/get {:headers {"Authorization" (format "Bearer %s" (auth/access-token credential))}})
