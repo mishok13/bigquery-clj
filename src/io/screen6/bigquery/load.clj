@@ -13,8 +13,8 @@
 (def ^:private MULTIPART-UPLOAD-URL
   (format "%s/upload/bigquery/v2/projects/%%s/jobs?uploadType=multipart" API-URL))
 
-(defn- schema
-  [project dataset table columns]
+(defn- make-schema
+  [{:keys [project dataset table columns]}]
   ;; There's also a :sourceFormat, but that's only for JSON files.
   ;; TODO: add support for sourceFormat
   {:configuration
@@ -31,23 +31,28 @@
   1. Get resumable session id
   2. Upload file
   3. Handle failures"
-  [credential project dataset table columns path]
+  [creds path schema & {:keys [type]}]
+  (assert (= type :csv))
+  ;; Schema should contain columns, table, dataset and project info
+  ;; XXX: look into combining that with Google API credentials?
+
   ;; Just get a new token every time, that's the stupidest and yet
   ;; most effective way to handle this for now
-  (auth/refresh! credential)
+  ;; Maybe detect type of file here?
+  (auth/refresh! creds)
   (assert (.exists (io/file path)) "File doesn't exist")
   (let [content-length (.length (io/file path))
-        session-url (-> (format RESUMABLE-UPLOAD-URL project)
+        session-url (-> (format RESUMABLE-UPLOAD-URL (:project schema))
                         (http/post
-                         {:body (json/encode (schema project dataset table columns))
+                         {:body (json/encode (make-schema schema))
                           :headers {"X-Upload-Content-Type" "application/octet-stream"
                                     "X-Upload-Content-Length" content-length
                                     "Content-Type" "application/json; charset=UTF-8"
-                                    "Authorization" (format "Bearer %s" (auth/access-token credential))}})
+                                    "Authorization" (format "Bearer %s" (auth/access-token creds))}})
                         (get-in  [:headers "Location"]))
         job (http/put session-url
                       {:body (slurp path)
-                       :headers {"Authorization" (format "Bearer %s" (auth/access-token credential))
+                       :headers {"Authorization" (format "Bearer %s" (auth/access-token creds))
                                  "Content-Type" "application/octet-stream"}})]
     ;; TODO: actually wait for result!
     (let [link (-> job :body (json/decode true) :selfLink)]
@@ -57,7 +62,7 @@
           (do
             (Thread/sleep 500)
             (recur (-> link
-                       (http/get {:headers {"Authorization" (format "Bearer %s" (auth/access-token credential))}})
+                       (http/get {:headers {"Authorization" (format "Bearer %s" (auth/access-token creds))}})
                        (:body)
                        (json/decode true)
                        (get-in [:status :state])))))))))
