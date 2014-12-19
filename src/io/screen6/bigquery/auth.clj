@@ -16,13 +16,16 @@
 (extend-protocol CredentialProtocol
   GoogleCredential
   (refresh! [this]
-    ;; This returns true on success
-    ;; TODO: figure out what to do on failure?
-    (.refreshToken this))
+    ;; The following line returns true on success, but how do we
+    ;; handle failure?
+    ;; TODO: figure out failure handling
+    (.refreshToken this)
+    this)
   (access-token [this]
     (.getAccessToken this))
+
   Credential
-  (refresh! [this])
+  (refresh! [this] this)
   (access-token [this] (:token this)))
 
 (defn google-credential
