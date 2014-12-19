@@ -91,5 +91,8 @@
 
 (defn- jobs
   [bq project]
-  (http/get (format "https://www.googleapis.com/bigquery/v2/projects/%s/jobs" project)
-            {:headers {"Authorization" (format "Bearer %s" (.getAccessToken bq))}}))
+  (:jobs (json/decode (:body
+                       (http/get (format "https://www.googleapis.com/bigquery/v2/projects/%s/jobs" project)
+                                 {:headers {"Authorization" (format "Bearer %s" (auth/access-token bq))}
+                                  :throw-entire-message? true}))
+                      true)))
