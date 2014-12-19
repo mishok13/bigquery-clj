@@ -35,7 +35,7 @@
   (assert (= 1 (count delimiter)))
   (-> {}
       (assoc-in [:configuration :load :fieldDelimiter] delimiter)
-      (assoc-in [:configuration :load :schema] (make-schema (:columns schema)))
+      (assoc-in [:configuration :load :schema] (make-schema schema))
       (assoc-in [:configuration :load :destinationTable] (make-table schema))))
 
 (defn- ^:testable init-resumable-session
