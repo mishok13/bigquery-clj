@@ -1,10 +1,10 @@
 (ns io.screen6.bigquery.load
   "Loading data into BigQuery"
-  (:require
-   [cheshire.core :as json]
-   [clj-http.client :as http]
-   [clojure.java.io :as io]
-   [io.screen6.bigquery.auth :as auth]))
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as logging]
+            [io.screen6.bigquery.auth :as auth]))
 
 (def ^:private API-URL
   "https://www.googleapis.com")
