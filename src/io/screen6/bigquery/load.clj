@@ -62,7 +62,7 @@
   ;; Schema should contain columns, table, dataset and project info
   ;; XXX: look into combining that with Google API credentials?
   ;; Terrible way to ensure this, BUT I DON'T CARE RIGHT NOW
-  (assert #{:project :table :columns :dataset} (set (keys schema)))
+  (assert (= #{:project :table :columns :dataset} (set (keys schema))))
   ;; Make sure the file exists
   (assert (.exists (io/file path)) "File doesn't exist")
 
