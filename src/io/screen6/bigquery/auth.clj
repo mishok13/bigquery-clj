@@ -8,8 +8,10 @@
    [com.google.api.client.googleapis.javanet GoogleNetHttpTransport]))
 
 (defprotocol CredentialProtocol
-  (refresh! [this])
-  (access-token [this]))
+  (refresh! [this]
+    "Refresh the credentials and get new token if needed")
+  (access-token [this]
+    "Retrieve access token from credentials"))
 
 (defrecord Credential [email scopes subject expires token])
 
