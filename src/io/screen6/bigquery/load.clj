@@ -15,7 +15,7 @@
 
 (defn- ^:testable make-schema
   [{:keys [columns]}]
-  {:fields (map (fn prepare-column [[name type]] {:name name :type type}) columns)})
+  {:fields (map (partial zipmap [:name :type]) columns)})
 
 (defn- ^:testable make-table
   [{:keys [project dataset table]}]
